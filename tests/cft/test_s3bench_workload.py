@@ -112,6 +112,90 @@ class TestWorkloadS3Bench:
                 f"S3bench workload for object size {workload} failed. " \
                 f"Please read log file {resp[1]}"
 
+    @pytest.mark.tags("HareRunIos")
+    def test_moderate_workload_with_mix_object_size(self):
+        """S3bench Workload test"""
+        bucket_name = "test-bucket"
+        workloads = [
+            "4Kb", "64Kb", "256Kb", "1Mb", "4Mb", "16Mb", "128Mb", "256Mb", "1Gb"
+        ]
+        resp = s3bench.setup_s3bench()
+        assert (resp, resp), "Could not setup s3bench."
+        for workload in workloads:
+            self.log.info(f"ACCESS_KEY {ACCESS_KEY}\n SECRET_KEY {SECRET_KEY}")
+            self.log.info(f"workload {workload}\n")
+            resp = s3bench.s3bench(ACCESS_KEY, SECRET_KEY, bucket=bucket_name, num_clients=50,
+                                   num_sample=10000, obj_name_pref="loadgen_test_", obj_size=workload,
+                                   skip_cleanup=False, duration=None, log_file_prefix="TEST-mix",
+                                   end_point=S3_CFG["s3_url"],
+                                   validate_certs=S3_CFG["validate_certs"])
+            self.log.info(f"json_resp {resp[0]}\n Log Path {resp[1]}")
+            assert not s3bench.check_log_file_error(resp[1]), \
+                f"S3bench workload for object size {workload} failed. " \
+                f"Please read log file {resp[1]}"
+
+    @pytest.mark.tags("HareRunIos")
+    def test_high_workload_with_small_object_sizes(self):
+        """S3bench Workload test"""
+        bucket_name = "test-bucket"
+        workloads = [
+            "4Kb", "4Kb", "4Kb", "64Kb", "64Kb", "64Kb", "64Kb", "128Kb", "128Kb",
+            "128Kb", "128Kb", "512Kb", "512Kb", "512Kb", "512Kb"
+        ]
+        resp = s3bench.setup_s3bench()
+        assert (resp, resp), "Could not setup s3bench."
+        for workload in workloads:
+            resp = s3bench.s3bench(ACCESS_KEY, SECRET_KEY, bucket=bucket_name, num_clients=200,
+                                   num_sample=500000, obj_name_pref="loadgen_test_", obj_size=workload,
+                                   skip_cleanup=False, duration=None, log_file_prefix="TEST-small",
+                                   end_point=S3_CFG["s3_url"],
+                                   validate_certs=S3_CFG["validate_certs"])
+            self.log.info(f"json_resp {resp[0]}\n Log Path {resp[1]}")
+            assert not s3bench.check_log_file_error(resp[1]), \
+                f"S3bench workload for object size {workload} failed. " \
+                f"Please read log file {resp[1]}"
+
+    @pytest.mark.tags("HareRunIos")
+    def test_high_workload_with_large_object_sizes(self):
+        """S3bench Workload test"""
+        bucket_name = "test-bucket"
+        workloads = [
+            "1Mb", "1Mb", "1Mb", "4Mb", "4Mb", "4Mb", "4Mb", "16Mb", "16Mb", "16Mb",
+            "16Mb", "64Mb", "64Mb", "64Mb", "64Mb", "128Mb", "128Mb", "128Mb", "128Mb"
+        ]
+        resp = s3bench.setup_s3bench()
+        assert (resp, resp), "Could not setup s3bench."
+        for workload in workloads:
+            resp = s3bench.s3bench(ACCESS_KEY, SECRET_KEY, bucket=bucket_name, num_clients=200,
+                                   num_sample=40000, obj_name_pref="loadgen_test_", obj_size=workload,
+                                   skip_cleanup=False, duration=None, log_file_prefix="TEST-large",
+                                   end_point=S3_CFG["s3_url"],
+                                   validate_certs=S3_CFG["validate_certs"])
+            self.log.info(f"json_resp {resp[0]}\n Log Path {resp[1]}")
+            assert not s3bench.check_log_file_error(resp[1]), \
+                f"S3bench workload for object size {workload} failed. " \
+                f"Please read log file {resp[1]}"
+
+    @pytest.mark.tags("HareRunIos")
+    def test_with_high_workload_with_mix_object_sizes(self):
+        """S3bench Workload test"""
+        bucket_name = "test-bucket"
+        workloads = [
+            "4Kb", "64Kb", "256Kb", "1Mb", "4Mb", "16Mb", "128Mb", "256Mb", "1Gb"
+        ]
+        resp = s3bench.setup_s3bench()
+        assert (resp, resp), "Could not setup s3bench."
+        for workload in workloads:
+            resp = s3bench.s3bench(ACCESS_KEY, SECRET_KEY, bucket=bucket_name, num_clients=300,
+                                   num_sample=40000, obj_name_pref="loadgen_test_", obj_size=workload,
+                                   skip_cleanup=False, duration=None, log_file_prefix="TEST-high-mix",
+                                   end_point=S3_CFG["s3_url"],
+                                   validate_certs=S3_CFG["validate_certs"])
+            self.log.info(f"json_resp {resp[0]}\n Log Path {resp[1]}")
+            assert not s3bench.check_log_file_error(resp[1]), \
+                f"S3bench workload for object size {workload} failed. " \
+                f"Please read log file {resp[1]}"
+
     @pytest.mark.run(order=2)
     @pytest.mark.data_durability
     @pytest.mark.tags("TEST-24673")
