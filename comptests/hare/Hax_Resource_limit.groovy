@@ -39,7 +39,7 @@ ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py --c
                 stage("Monitor script with Deployment") {
                     steps {
                         sh script: '''
-ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py -p phase1_deployment -t 60"
+ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py -p phase1_deployment -t 10"
 '''
                     }
                 }
@@ -80,7 +80,7 @@ ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p
                 stage("Monitor script with IOs") {
                     steps {
                         sh script: '''
-ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p phase3_during_io -t 60"
+ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p phase3_during_io -t 5"
 '''
                     }
                 }
@@ -140,7 +140,7 @@ ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p
                 stage("Monitor script with Destroy") {
                     steps {
                         sh script: '''
-ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p phase5_destroy -t 60"
+ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p phase5_destroy -t 10"
 '''
                     }
                 }
