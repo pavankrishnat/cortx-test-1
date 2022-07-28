@@ -6,8 +6,10 @@ from typing import NamedTuple
 import sys
 import json
 import argparse
+import psutil
 
 StatRecord = NamedTuple('StatRecord', [('timestamp', str), ('name', str), ('cpu', str), ('mem', str)])
+
 
 class Statistics:
 
@@ -15,13 +17,13 @@ class Statistics:
         from kubernetes import client, config
         config.load_kube_config()
         self.api = client.CustomObjectsApi()
-        self.hax_stats=[]
-        self.max_cpu_list=[]
+        self.hax_stats = []
+        self.max_cpu_list = []
 
     def collect_readings(self, service):
         curr_stats = []
         k8s_pods = self.api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "pods")
-
+        print(f'Collecting readings for service={service}')
         for stats in k8s_pods['items']:
             # print(stats.keys(), len(stats['containers']),'\n')
 
@@ -31,44 +33,47 @@ class Statistics:
                     # print(f'{stats["metadata"]["name"]} {field["usage"]}')
                     curr_stats.append(
                         StatRecord(stats["timestamp"],
-                        stats["metadata"]["name"],
-                        field["usage"]["cpu"],
-                        field["usage"]["memory"]))
+                                   stats["metadata"]["name"],
+                                   field["usage"]["cpu"],
+                                   field["usage"]["memory"]))
 
-        self.aggregate_records(curr_stats)
+        res = self.aggregate_records(curr_stats)
         self.hax_stats.extend(curr_stats)
-
+        return res
 
     def aggregate_records(self, curr_stats):
-      if curr_stats:
-        max_cpu = max([ int(stat.cpu[:-1]) for stat in curr_stats])
-        self.max_cpu_list.append(max_cpu)
-      else:
-        print('Service is not present')
+        if curr_stats:
+            max_cpu = max([int(stat.cpu[:-1]) for stat in curr_stats])
+            self.max_cpu_list.append(max_cpu)
+            return True
+        else:
+            print('Service is not present')
+            return False
 
     def dump_records(self):
         with open('test.txt', 'a') as f:
             f.write(json.dumps(self.hax_stats))
 
     def dump_aggregated_records(self, file):
-      if self.max_cpu_list:
-        from datetime import datetime
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        with open(f'{file}.txt', 'a') as f:
-            f.write(
-                json.dumps({
+        if self.max_cpu_list:
+            from datetime import datetime
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            with open(f'{file}.txt', 'a') as f:
+                f.write(
+                    json.dumps({
 
-                     "timestamp": current_time,
-                     "res":self.max_cpu_list,
-                     "avg_max": sum(self.max_cpu_list) / len(self.max_cpu_list)}))
+                        "timestamp": current_time,
+                        "res": self.max_cpu_list,
+                        "avg_max": sum(self.max_cpu_list) / len(self.max_cpu_list)}))
+
 
 class MetricsServer:
 
     @staticmethod
     def config():
         config_file = "sample1.yaml"
-        data="""apiVersion: v1
+        data = """apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -269,19 +274,22 @@ spec:
         with open(config_file, "w") as f:
             f.write(data)
         output = subprocess.run(["kubectl", "apply", "-f", config_file])
-        ready=False
+        ready = False
         while not ready:
-          sleep(5)
-          s2='kubectl get pods --namespace kube-system'
-          p1 = subprocess.Popen(s2.split(), stdout=subprocess.PIPE)
-          p2 = subprocess.Popen(["grep", "metrics"], stdin=p1.stdout, stdout=subprocess.PIPE)
-          x=p2.communicate()
-          state = x[0].decode().split()[1]
-          ready = state=="1/1"
-          print("Waiting...")
+            sleep(5)
+            s2 = 'kubectl get pods --namespace kube-system'
+            p1 = subprocess.Popen(s2.split(), stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(["grep", "metrics"], stdin=p1.stdout, stdout=subprocess.PIPE)
+            x = p2.communicate()
+            state = x[0].decode().split()[1]
+            ready = state == "1/1"
+            print("Waiting...")
         print("installing python dependencies")
         output = subprocess.run(["pip3", "install", "kubernetes"], stdout=subprocess.PIPE)
         print("output=", output.returncode)
+        output = subprocess.run(["pip3", "install", "psutil"], stdout=subprocess.PIPE)
+        print("output=", output.returncode)
+
 
 def parse_opts(argv):
     p = argparse.ArgumentParser(
@@ -291,8 +299,8 @@ def parse_opts(argv):
     p.add_argument('--service',
                    '-s',
                    help='service name. - calculates resources for given service. '
-                   'List of services- "hax", "consul" '
-                   'Default: xortx-hax.',
+                        'List of services- "hax", "consul" '
+                        'Default: cortx-hax.',
                    type=str,
                    default='cortx-hax',
                    action='store')
@@ -304,34 +312,91 @@ def parse_opts(argv):
         '--phase',
         '-p',
         help='Calculate for that phase and creates a file with phase name'
-        'Default: default',
+             'Default: default',
         type=str,
         default='default',
         action='store')
     p.add_argument('--time',
                    '-t',
                    help='time interval of recordings at a given phase'
-                   ' Default: 5s',
+                        ' Default: 5s',
                    type=int,
                    default=5,
                    action='store')
     return p.parse_args(argv)
 
 
+def process_running(processName):
+    # Checking if there is any running process that contains the given name processName.
+    # Iterate over the all the running process
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains the given name string.
+            for item in proc.cmdline():
+
+                if processName.lower() in item and sys.argv[0] not in proc.cmdline():
+                    print(proc.cmdline())
+                    return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
+
+
+def wait_till_process_starts(process_name):
+    while not process_running(process_name):
+        print(f'waiting for {process_name}')
+        sleep(5)
+
+
+def deployment_stage(stat, service, time):
+    process = 'deploy-cortx-cloud.sh'
+    wait_till_process_starts(process)
+
+    while not stat.collect_readings(service):
+        sleep(5)
+    while process_running(process):
+        stat.collect_readings(service)
+        sleep(time)
+
+
+def default_run(stat, service, time, iterations=10):
+    for i in range(iterations):
+        stat.collect_readings(service)
+        sleep(time)
+
+
+def io_run(stat, service, time):
+    default_run(stat, service, time, 100)
+
+
+def destroy_stage(stat, service, time):
+    process = 'destroy-cortx-cloud.sh'
+    wait_till_process_starts(process)
+
+    while stat.collect_readings(service):
+        sleep(time)
+
+
 def main(argv=None):
     opts = parse_opts(argv)
     if opts.config:
-      MetricsServer.config()
+        MetricsServer.config()
     stat = Statistics()
     iterations = 10
 
-    for i in range(iterations):
-        stat.collect_readings(opts.service)
-        sleep(opts.time)
+    stage_to_process = {
+        'phase1_deployment': deployment_stage,
+        'phase3_during_io': io_run,
+        'phase5_destroy ': destroy_stage
+    }
+    if opts.phase in stage_to_process:
+        stage_to_process[opts.phase](stat, opts.service, opts.time)
+    else:
+        default_run(stat, opts.service, opts.time)
 
     stat.dump_records()
     stat.dump_aggregated_records(opts.phase)
 
-if __name__ == '__main__':
 
-     sys.exit(main())
+if __name__ == '__main__':
+    sys.exit(main())
