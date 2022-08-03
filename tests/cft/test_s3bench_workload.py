@@ -117,8 +117,7 @@ class TestWorkloadS3Bench:
         """S3bench Workload test"""
         bucket_name = "test-bucket"
         workloads = [
-            "1Kb", "4Kb", "8Kb", "16Kb", "32Kb", "64Kb", "256Kb",
-            "1Mb", "4Mb", "8Mb", "16Mb", "128Mb", "256Mb", "1Gb"
+            "4Kb", "64Kb", "256Kb", "1Mb", "4Mb", "16Mb", "128Mb", "256Mb", "1Gb"
         ]
         resp = s3bench.setup_s3bench()
         assert (resp, resp), "Could not setup s3bench."
