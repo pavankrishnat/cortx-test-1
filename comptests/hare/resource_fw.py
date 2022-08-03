@@ -71,8 +71,9 @@ class Statistics:
                 f.write(
                     json.dumps({
                         "timestamp": current_time,
-                        "res": self.max_cpu_list,
+                        "res_cpu": self.max_cpu_list,
                         "avg_max_cpu": sum(self.max_cpu_list) / len(self.max_cpu_list),
+                        "res_mem": self.max_mem_list,
                         "avg_max_mem": sum(self.max_mem_list) / len(self.max_mem_list)
                     }))
 
