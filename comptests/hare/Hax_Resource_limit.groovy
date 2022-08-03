@@ -107,7 +107,7 @@ ssh root@ssc-vm-g4-rhev4-1587.colo.seagate.com "cd && python3 resource_fw.py  -p
                             sh label: '', script: ''' source venv/bin/activate
                     export PYTHONPATH=$WORKSPACE:$PYTHONPATH
                     test_name=($TEST_Name)
-                    pytest -k $test_name --local True --target cicd_deploy_ssc-vm-g4-rhev4-1587_4 --validate_certs False --health_check False
+                    pytest -k $test_name --local True --target cicd_deploy_ssc-vm-g4-rhev4-1587_5 --validate_certs False --health_check False
                     # chmod a+x scripts/cicd_k8s_cortx_deploy/log_collecter.sh
                     # . ./scripts/cicd_k8s_cortx_deploy/log_collecter.sh ${BUILD} ${SETUP_ENTRY} ${WORKSPACE} IOStability-PI7
                     # echo $LOG_PATH

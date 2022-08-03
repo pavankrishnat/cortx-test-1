@@ -122,6 +122,8 @@ class TestWorkloadS3Bench:
         resp = s3bench.setup_s3bench()
         assert (resp, resp), "Could not setup s3bench."
         for workload in workloads:
+            self.log.info(f"ACCESS_KEY {ACCESS_KEY}\n SECRET_KEY {SECRET_KEY}")
+            self.log.info(f"workload {workload}\n")
             resp = s3bench.s3bench(ACCESS_KEY, SECRET_KEY, bucket=bucket_name, num_clients=50,
                                    num_sample=10000, obj_name_pref="loadgen_test_", obj_size=workload,
                                    skip_cleanup=False, duration=None, log_file_prefix="TEST-mix",
