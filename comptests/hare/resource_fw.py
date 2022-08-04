@@ -49,11 +49,17 @@ class Statistics:
 
     def aggregate_records(self, curr_stats):
         if curr_stats:
-            max_cpu = max((int(stat.cpu[:-1]) for stat in curr_stats))
-            self.max_cpu_list.append(max_cpu)
-            max_mem = max((int(stat.mem[:-2]) for stat in curr_stats))
-            self.max_mem_list.append(max_mem)
-            return True
+            try:
+                max_cpu = max((int(stat.cpu[:-1]) for stat in curr_stats))
+                self.max_cpu_list.append(max_cpu)
+                max_mem = max((int(stat.mem[:-2]) for stat in curr_stats))
+                self.max_mem_list.append(max_mem)
+            except Exception as error:
+                print(f"here's current stats {curr_stats}")
+                print("error due to", error)
+                return False
+            else:
+                return True
         else:
             print('Service is not present')
             return False
@@ -283,7 +289,7 @@ spec:
 """
         with open(config_file, "w") as f:
             f.write(data)
-        output = subprocess.run(["kubectl", "apply", "-f", config_file])
+        subprocess.run(["kubectl", "apply", "-f", config_file])
         ready = False
         while not ready:
             sleep(5)
@@ -303,7 +309,7 @@ spec:
 
 def parse_opts(argv):
     p = argparse.ArgumentParser(
-        description='Calculates the resources comsumed by pods running hax.',
+        description='Calculates the resources consumed by pods running hax.',
         usage='%(prog)s [OPTION]')
 
     p.add_argument('--service',
@@ -395,7 +401,6 @@ def main(argv=None):
     if opts.config:
         MetricsServer.config()
     stat = Statistics()
-    iterations = 10
 
     stage_to_process = {
         'phase1_deployment': deployment_stage,
