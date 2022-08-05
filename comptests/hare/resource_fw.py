@@ -390,7 +390,7 @@ def io_running_stage(stat, service, time):
 
     while not os.path.exists(process_tracking_file):
         print('Waiting for io file to be created')
-        time.sleep(5)
+        sleep(5)
 
     while os.path.exists(process_tracking_file):
         stat.collect_readings(service)
