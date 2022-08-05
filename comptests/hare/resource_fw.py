@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import os
 import subprocess
 from time import sleep
 from typing import NamedTuple
@@ -384,6 +384,19 @@ def default_run(stat, service, time, iterations=10):
         sleep(time)
 
 
+def io_running_stage(stat, service, time):
+    process_tracking_file = '/root/IO_tracker.log'
+    # wait_till_process_starts
+
+    while not os.path.exists(process_tracking_file):
+        print('Waiting for io file to be created')
+        time.sleep(5)
+
+    while os.path.exists(process_tracking_file):
+        stat.collect_readings(service)
+        sleep(time)
+
+
 def io_run(stat, service, time):
     default_run(stat, service, time, 100)
 
@@ -404,7 +417,7 @@ def main(argv=None):
 
     stage_to_process = {
         'phase1_deployment': deployment_stage,
-        'phase3_during_io': io_run,
+        'phase3_during_io': io_running_stage,
         'phase5_destroy ': destroy_stage
     }
     if opts.phase in stage_to_process:
