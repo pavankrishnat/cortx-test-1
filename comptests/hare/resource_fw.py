@@ -6,7 +6,6 @@ from typing import NamedTuple
 import sys
 import json
 import argparse
-import psutil
 
 StatRecord = NamedTuple('StatRecord', [('timestamp', str), ('name', str), ('cpu', str), ('mem', str)])
 
@@ -345,6 +344,7 @@ def parse_opts(argv):
 def process_running(processName):
     # Checking if there is any running process that contains the given name processName.
     # Iterate over the all the running process
+    import psutil
     for proc in psutil.process_iter():
         try:
             # Check if process name contains the given name string.
