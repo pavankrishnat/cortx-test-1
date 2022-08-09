@@ -39,7 +39,7 @@ ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py --config"
                 stage("Monitor script with Deployment") {
                     steps {
                         sh script: '''
-ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase1_deployment -t 10"
+ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase1_deployment -t 5"
 '''
                     }
                 }
@@ -80,7 +80,7 @@ ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase2_before_io -t
                 stage("Monitor script with IOs") {
                     steps {
                         sh script: '''
-ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase3_during_io -t 5"
+ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase3_during_io -t 10"
 '''
                     }
                 }
@@ -149,7 +149,7 @@ ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase4_after_io -t 
             stage("Monitor script with Destroy") {
                 steps {
                     sh script: '''
-ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase5_destroy -t 10"
+ssh root@$(head -n 1 hosts) "cd && python3 resource_fw.py -p phase5_destroy -t 5"
 '''
                 }
             }
